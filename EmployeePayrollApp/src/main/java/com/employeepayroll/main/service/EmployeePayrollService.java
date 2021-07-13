@@ -1,6 +1,5 @@
 package com.employeepayroll.main.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -16,37 +15,41 @@ import com.employeepayroll.main.repository.IEmpRepository;
 public class EmployeePayrollService implements IEmployeePayrollService {
 	@Autowired
 	private IEmpRepository employeeRepository;
-	private List<EmployeePayrollData> employeePayrollList = new ArrayList<>();
+	
+	@Override
+	public List<EmployeePayrollData> getEmployeePayrolldata() {
+		return employeeRepository.findAll();
+	}
 	
 	@Override
 	public EmployeePayrollData getEmployeePayrollDataById(int empId) {
-		return employeePayrollList.stream().filter(empData->(empData.getEmployeeId()==empId))
-				.findFirst().orElseThrow(()->new EmployeePayrollException("Employee Not Found"));
+		return employeeRepository.findById(empId).orElseThrow(()->new EmployeePayrollException("Employee Not Found"));
 	}
 	
 	@Override
 	public EmployeePayrollData createEmployeePayrollData(EmployeePayrollDTO empPayrollDTO) {
-		EmployeePayrollData empData = new EmployeePayrollData();
-		empData.getName();
+		EmployeePayrollData empData = null;
+		empData = new EmployeePayrollData(empPayrollDTO);
 		BeanUtils.copyProperties(empPayrollDTO,empData);
 		return employeeRepository.save(empData);
 	}
 	@Override
 	public EmployeePayrollData updateEmployeePayrollData(int empId,EmployeePayrollDTO empPayrollDTO) {
-		EmployeePayrollData empData = this.getEmployeePayrollDataById(empId);
-		empData.setName(empPayrollDTO.getName());
-		empData.setSalary(empPayrollDTO.getSalary());
-		empData.setGender(empPayrollDTO.getGender());
-		empData.setNote(empPayrollDTO.getNote());
-		empData.setStartDate(empPayrollDTO.getStartDate());
-		empData.setDepartment(empPayrollDTO.getDepartment());
-		employeePayrollList.set(empId, empData);
-		return empData;
+		EmployeePayrollData empdata=this.getEmployeePayrollDataById(empId);
+		empdata.setName(empPayrollDTO.getName());
+		empdata.setSalary(empPayrollDTO.getSalary());
+		empdata.setGender(empPayrollDTO.getGender());
+		empdata.setNote(empPayrollDTO.getNote());
+		empdata.setStartDate(empPayrollDTO.getStartDate());
+		empdata.setDepartment(empPayrollDTO.getDepartment());
+		employeeRepository.save(empdata);
+		return employeeRepository.findById(empId).get()	;	
 	}
 	
 	@Override
 	public void deleteEmployeePayrollData(int empId) {
-		employeePayrollList.remove(empId-1);
+		EmployeePayrollData empData = this.getEmployeePayrollDataById(empId);
+		employeeRepository.delete(empData);
 	}
 	
 	@Override
@@ -55,9 +58,5 @@ public class EmployeePayrollService implements IEmployeePayrollService {
 		
 	}
 
-	@Override
-	public List<EmployeePayrollData> getEmployeePayrolldata() {
-		return employeePayrollList;
-		//return null;
-	}
+	
 }
